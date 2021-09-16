@@ -68,9 +68,11 @@ func joinHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 	if err != nil {
 		return p, errors.New("DB ERROR")
 	} else {
-		p.State = "Success"
-		p.Message = map[string]string{
-			"userid": i.id,
+		p = Post{
+			State: "Success",
+			Message: map[string]string{
+				"userid": i.id,
+			},
 		}
 		return p, err
 	}
@@ -98,8 +100,10 @@ func listHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 		msg[id] = "userid: " + id + ", username: " + name
 	}
 
-	p.State = "Success"
-	p.Message = msg
+	p = Post{
+		State:   "Success",
+		Message: msg,
+	}
 	return p, err
 }
 
@@ -116,15 +120,17 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 	if err != nil {
 		return p, errors.New("DB ERROR")
 	} else {
-		p.State = "Success"
-		p.Message = map[string]string{
-			"userid": r.Form.Get("id"),
+		p = Post{
+			State: "Success",
+			Message: map[string]string{
+				"userid": r.Form.Get("id"),
+			},
 		}
 		return p, err
 	}
 }
 
-// 회원업데이트
+// 회원수정
 func updateHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 	p := Post{}
 
@@ -142,9 +148,11 @@ func updateHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 	if err != nil {
 		return p, errors.New("DB ERROR")
 	} else {
-		p.State = "Success"
-		p.Message = map[string]string{
-			"userid": i.id,
+		p = Post{
+			State: "Success",
+			Message: map[string]string{
+				"userid": i.id,
+			},
 		}
 		return p, err
 	}
