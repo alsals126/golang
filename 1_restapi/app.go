@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -34,31 +35,29 @@ func dbConnection(db_user, db_password, db_name string) {
 	}
 }
 
-var stateStr string = ""
-
 // json으로 인코딩하는 미들웨어
-func jsonEncoding(handler func(http.ResponseWriter, *http.Request) map[string]string) http.HandlerFunc {
+func (p *Post) jsonEncoding(handler func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		msg := handler(w, r)
+		err := handler(w, r)
 
 		// json encoding
 		w.Header().Set("Content-Type", "application/json")
-		post := &Post{
-			State:   stateStr,
-			Message: msg,
+		if err != nil {
+			p.State = err.Error()
 		}
-		json, _ := json.Marshal(post)
+		fmt.Print(p)
+		json, _ := json.Marshal(p)
 		w.Write(json)
 	}
 }
 
 // 회원가입
-func (i infoApp) joinHandler(w http.ResponseWriter, r *http.Request) map[string]string {
+func (p *Post) joinHandler(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseForm()
 	if err != nil {
-		stateStr = "FORM ERROR"
+		return errors.New("FORM ERROR")
 	}
-	i = infoApp{
+	i := infoApp{
 		r.Form.Get("name"),
 		r.Form.Get("id"),
 		r.Form.Get("pw"),
@@ -66,50 +65,69 @@ func (i infoApp) joinHandler(w http.ResponseWriter, r *http.Request) map[string]
 
 	_, err = db.Exec("INSERT INTO restapi1(name, id, pw) VALUES($1, $2, $3)", i.name, i.id, i.pw)
 	if err != nil {
-		stateStr = "DB ERROR"
+		return errors.New("DB ERROR")
 	} else {
-		stateStr = "Success"
+		p.State = "Success"
+		p.Message = map[string]string{
+			"userid": i.id,
+		}
+		return err
 	}
-
-	m := map[string]string{
-		"userid": i.id,
-	}
-
-	return m
 }
 
 // 회원목록
-func (i infoApp) listHandler(w http.ResponseWriter, r *http.Request) map[string]string {
-	rows, err := db.Query("SELECT * FROM login")
+func (p *Post) listHandler(_ http.ResponseWriter, _ *http.Request) error {
+	rows, err := db.Query("SELECT id, name FROM restapi1")
 	if err != nil {
-		stateStr = "DB ERROR"
+		return errors.New("DB ERROR1")
 	}
 	defer rows.Close()
 
-	m := make(map[string]string)
+	fmt.Println(rows)
 	for rows.Next() {
 		var id string
 		var name string
 
 		err = rows.Scan(&id, &name)
-		m[id] = "userid: " + id + ", username: " + name
+		p.Message[id] = "userid: " + id + ", username: " + name
 	}
 
-	return m
+	p.State = "Success"
+	return err
 }
+
+// 회원탈퇴
+func (p *Post) deleteHandler(w http.ResponseWriter, r *http.Request) error {
+	err := r.ParseForm()
+	if err != nil {
+		return errors.New("FORM ERROR")
+	}
+
+	_, err = db.Exec("DELETE FROM restapi1 WHERE id=$1", r.FormValue("id"))
+	if err != nil {
+		return errors.New("DB ERROR")
+	} else {
+		p.State = "Success"
+		p.Message = map[string]string{
+			"userid": r.Form.Get("id"),
+		}
+		return err
+	}
+}
+
 func main() {
 	dbConnection("jeongmin", "1234asdf#$", "jeongmindb")
 	defer db.Close()
 
 	pathPrefix := "/restapi"
-
-	i := infoApp{}
+	p := Post{}
 
 	http.HandleFunc(pathPrefix, func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API Server")
 	})
-	http.HandleFunc(pathPrefix+"/join", jsonEncoding(i.joinHandler))
-	http.HandleFunc(pathPrefix+"/list", jsonEncoding(i.listHandler))
+	http.HandleFunc(pathPrefix+"/join", p.jsonEncoding(p.joinHandler))
+	http.HandleFunc(pathPrefix+"/list", p.jsonEncoding(p.listHandler))
+	http.HandleFunc(pathPrefix+"/delete", p.jsonEncoding(p.deleteHandler))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
