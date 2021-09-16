@@ -36,10 +36,9 @@ func dbConnection(db_user, db_password, db_name string) {
 }
 
 // json으로 인코딩하는 미들웨어
-func (p *Post) jsonEncoding(handler func(http.ResponseWriter, *http.Request) (Post, error)) http.HandlerFunc {
+func jsonEncoding(handler func(http.ResponseWriter, *http.Request) (Post, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var err error
-		*p, err = handler(w, r)
+		p, err := handler(w, r)
 
 		// json encoding
 		w.Header().Set("Content-Type", "application/json")
@@ -156,15 +155,13 @@ func main() {
 	defer db.Close()
 
 	pathPrefix := "/restapi"
-	p := Post{}
-
 	http.HandleFunc(pathPrefix, func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "API Server")
 	})
-	http.HandleFunc(pathPrefix+"/join", p.jsonEncoding(joinHandler))
-	http.HandleFunc(pathPrefix+"/list", p.jsonEncoding(listHandler))
-	http.HandleFunc(pathPrefix+"/delete", p.jsonEncoding(deleteHandler))
-	http.HandleFunc(pathPrefix+"/update", p.jsonEncoding(updateHandler))
+	http.HandleFunc(pathPrefix+"/join", jsonEncoding(joinHandler))
+	http.HandleFunc(pathPrefix+"/list", jsonEncoding(listHandler))
+	http.HandleFunc(pathPrefix+"/delete", jsonEncoding(deleteHandler))
+	http.HandleFunc(pathPrefix+"/update", jsonEncoding(updateHandler))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
