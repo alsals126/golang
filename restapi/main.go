@@ -106,7 +106,7 @@ func list(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// json unmarshal
-	var p app.Post
+	var p app.ListPost
 	err = json.Unmarshal([]byte(respBody), &p)
 	if err != nil {
 		fmt.Fprintln(w, errMSG)
@@ -117,15 +117,13 @@ func list(w http.ResponseWriter, _ *http.Request) {
 		// Map의 특정 key로 정렬
 		sortKeys := make([]string, 0, len(p.Message))
 		for k := range p.Message {
-			sortKeys = append(sortKeys, k)
+			sortKeys = append(sortKeys, p.Message[k].Userid)
 		}
 		sort.Strings(sortKeys)
 
-		// 결과 출력
-		s := "<h1>LIST</h1><table border=\"1\">"
-		for _, val := range sortKeys {
-			v := strings.Split(p.Message[val], ",")
-			s += "<tr><td>" + v[0] + "</td><td>" + v[1] + "</td></tr>"
+		s := "<h1>LIST</h1><table border=\"1\"><th style=\"min-width: 150px\">USER ID</th><th style=\"min-width: 150px\">USER NAME</th>"
+		for _, val := range p.Message {
+			s += "<tr><td>" + val.Userid + "</td><td>" + val.Username + "</td></tr>"
 		}
 		s += "</table><br>" + "<input type=\"button\" value=\"MAIN\" onClick=\"location.href='/'\">"
 
@@ -166,7 +164,6 @@ func deleteServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
-	fmt.Println("nmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn")
 
 	// 응답 확인
 	respBody, err := ioutil.ReadAll(resp.Body)

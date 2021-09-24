@@ -12,14 +12,25 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// User struct
 type InfoApp struct {
 	name string
 	id   string
 	pw   string
 }
+
+// response struct
 type Post struct {
 	State   string
 	Message map[string]string
+}
+type ListPost struct {
+	State   string
+	Message []List
+}
+type List struct {
+	Userid   string
+	Username string
 }
 
 var db *sql.DB
@@ -37,6 +48,19 @@ func dbConnection(db_user, db_password, db_name string) {
 
 // json으로 인코딩하는 미들웨어
 func jsonEncoding(handler func(http.ResponseWriter, *http.Request) (Post, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p, err := handler(w, r)
+
+		// json encoding
+		w.Header().Set("Content-Type", "application/json")
+		if err != nil {
+			p.State = err.Error()
+		}
+		json, _ := json.Marshal(p)
+		w.Write(json)
+	}
+}
+func jsonEncodingList(handler func(http.ResponseWriter, *http.Request) (ListPost, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p, err := handler(w, r)
 
@@ -79,11 +103,10 @@ func joinHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 }
 
 // 회원목록
-func listHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
-	p := Post{}
-	msg := make(map[string]string)
+func listHandler(w http.ResponseWriter, r *http.Request) (ListPost, error) {
+	p := ListPost{}
 
-	rows, err := db.Query("SELECT id, name FROM restapi1")
+	rows, err := db.Query("SELECT id, name FROM restapi1 order by id")
 	if err != nil {
 		return p, errors.New("DB ERROR1")
 	}
@@ -96,13 +119,13 @@ func listHandler(w http.ResponseWriter, r *http.Request) (Post, error) {
 		if err != nil {
 			return p, errors.New("DB ERROR2")
 		}
-		msg[id] = "userid: " + id + ", username: " + name
+		p.Message = append(p.Message, List{
+			Userid:   id,
+			Username: name,
+		})
 	}
+	p.State = "Success"
 
-	p = Post{
-		State:   "Success",
-		Message: msg,
-	}
 	return p, err
 }
 
@@ -218,7 +241,7 @@ func ApiServer() {
 		fmt.Fprintln(w, "API Server")
 	})
 	http.HandleFunc(pathPrefix+"/join", jsonEncoding(joinHandler))
-	http.HandleFunc(pathPrefix+"/list", jsonEncoding(listHandler))
+	http.HandleFunc(pathPrefix+"/list", jsonEncodingList(listHandler))
 	http.HandleFunc(pathPrefix+"/delete", jsonEncoding(deleteHandler))
 	http.HandleFunc(pathPrefix+"/update", jsonEncoding(updateHandler))
 	http.HandleFunc(pathPrefix+"/updatelist", jsonEncoding(updateList))
