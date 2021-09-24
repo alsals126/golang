@@ -1,0 +1,153 @@
+---
+swagger: "2.0"
+info:
+  description: "REST API Server"
+  version: "1.0.0"
+  title: "golang_postgresql_user"
+host: "virtserver.swaggerhub.com"
+basePath: "/alsals126/golang_postgresql_user/1.0.0"
+schemes:
+- "https"
+produces:
+- "application/json"
+paths:
+  /restapi/join:
+    post:
+      summary: "회원가입을 합니다."
+      consumes:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - name: "name"
+        in: "formData"
+        description: "User Name"
+        required: false
+        type: "string"
+        x-exportParamName: "Name"
+        x-optionalDataType: "String"
+      - name: "id"
+        in: "formData"
+        description: "User ID"
+        required: false
+        type: "string"
+        x-exportParamName: "Id"
+        x-optionalDataType: "String"
+      - name: "pw"
+        in: "formData"
+        description: "User PW"
+        required: false
+        type: "string"
+        x-exportParamName: "Pw"
+        x-optionalDataType: "String"
+      responses:
+        "200":
+          description: "SUCCESS or ERROR Message"
+          schema:
+            type: "object"
+            properties:
+              State:
+                type: "string"
+                example: "Success"
+              Message:
+                type: "object"
+                properties:
+                  userid:
+                    type: "string"
+                    example: "userID"
+  /restapi/list:
+    get:
+      summary: "회원 목록을 출력합니다."
+      consumes:
+      - "application/x-www-form-urlencoded"
+      parameters: []
+      responses:
+        "200":
+          description: "SUCCESS or ERROR Message"
+          schema:
+            type: "object"
+            properties:
+              State:
+                type: "string"
+                example: "Success"
+              Message:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    Userid:
+                      type: "string"
+                      example: "userID"
+                    Username:
+                      type: "string"
+                      example: "userName"
+  /restapi/delete:
+    delete:
+      summary: "회원삭제를 합니다."
+      consumes:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "User ID"
+        required: false
+        type: "string"
+        x-exportParamName: "Id"
+        x-optionalDataType: "String"
+      responses:
+        "200":
+          description: "SUCCESS or ERROR"
+          schema:
+            type: "object"
+            properties:
+              State:
+                type: "string"
+                example: "Success"
+                description: "ERROR CODE(including SUCCESS)"
+              Message:
+                type: "object"
+                properties:
+                  userid:
+                    type: "string"
+                    example: "userID"
+  /restapi/update:
+    put:
+      summary: "회원정보를 수정합니다."
+      consumes:
+      - "application/x-www-form-urlencoded"
+      parameters:
+      - name: "newName"
+        in: "formData"
+        description: "UserName to be updated"
+        required: false
+        type: "string"
+        x-exportParamName: "NewName"
+        x-optionalDataType: "String"
+      - name: "id"
+        in: "formData"
+        description: "User ID"
+        required: false
+        type: "string"
+        x-exportParamName: "Id"
+        x-optionalDataType: "String"
+      - name: "newPw"
+        in: "formData"
+        description: "UserPW to be updated"
+        required: false
+        type: "string"
+        x-exportParamName: "NewPw"
+        x-optionalDataType: "String"
+      responses:
+        "200":
+          description: "SUCCESS or ERROR"
+          schema:
+            type: "object"
+            properties:
+              State:
+                type: "string"
+                example: "Success"
+                description: "ERROR CODE(including SUCCESS)"
+              Message:
+                type: "object"
+                properties:
+                  userid:
+                    type: "string"
+                    example: "userID"
