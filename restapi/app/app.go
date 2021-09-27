@@ -42,7 +42,21 @@ func dbConnection(db_user, db_password, db_name string) {
 	var err error
 	db, err = sql.Open("postgres", dbinfo)
 	if err != nil {
-		panic(err)
+		p := Post{}
+
+		// json encoding
+		var w http.ResponseWriter
+		w.Header().Set("Content-Type", "application/json")
+		if err != nil {
+			p.State = "DB ERROR"
+		}
+		json, err := json.Marshal(p)
+		if err != nil {
+			p.State = "JSON ERROR"
+		}
+		w.Write(json)
+
+		return
 	}
 }
 
@@ -56,7 +70,10 @@ func jsonEncoding(handler func(http.ResponseWriter, *http.Request) (Post, error)
 		if err != nil {
 			p.State = err.Error()
 		}
-		json, _ := json.Marshal(p)
+		json, err := json.Marshal(p)
+		if err != nil {
+			p.State = "JSON ERROR"
+		}
 		w.Write(json)
 	}
 }

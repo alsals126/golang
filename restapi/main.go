@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -259,13 +260,19 @@ func updateServer(w http.ResponseWriter, r *http.Request) {
 	params.Add("newPw", r.Form.Get("pw"))
 	params.Add("newName", r.Form.Get("name"))
 
-	// Post로 요청
-	resp, err := http.PostForm("http://127.0.0.1:8080/restapi/update", params)
+	// put으로 요청
+	req, err := http.NewRequest("PUT", "http://127.0.0.1:8080/restapi/update", bytes.NewBufferString(params.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		fmt.Fprintln(w, errMSG)
 		return
 	}
 
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Fprintln(w, errMSG)
+		return
+	}
 	defer resp.Body.Close()
 
 	// 응답 확인
